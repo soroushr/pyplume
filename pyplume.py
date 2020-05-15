@@ -173,11 +173,15 @@ def get_melt(vel_inf,t_inf,s_inf,pressure):
 
     return t_b, s_b, mdot
 
-def wallPlume(z, y, ambient, z_max, MELT=True):
+def wallPlume(z, y, ambient, z_max, MELT=True, E_0=const.E_0):
     """Solve the equations for a wallPlume
 
     wallPlume formulation (halfCone in Cowton et al.)
     See: Cowton et al. (2015) DOI: 10.1002/2014JC010324
+
+    SRB modified:
+        Entrainment is added as a function to allow
+        iterations. Default is the same as const.E_0
     """
 
     # this was a safety check at some point - is it still needed?!
@@ -213,26 +217,27 @@ def wallPlume(z, y, ambient, z_max, MELT=True):
         y[1] = np.nan
         
     # Solve the plume equations and store in ydot
-    ydot[0] = (2.*const.E_0 + 4.*mdot/(math.pi*y[1])
+    ydot[0] = (2.*E_0 + 4.*mdot/(math.pi*y[1])
                - y[0]*const.G*(rho_a-rho_p)/(2.*y[1]*y[1]*const.RHO_REF)
                + 2. * (const.C_D/math.pi))
 
-    ydot[1] = (- 2.*const.E_0*y[1]/y[0] - 4.*mdot/(math.pi*y[0])
+    ydot[1] = (- 2.*E_0*y[1]/y[0] - 4.*mdot/(math.pi*y[0])
                + const.G*(rho_a-rho_p)/(y[1]*const.RHO_REF)
                - 4.*const.C_D*y[1]/(math.pi*y[0]))
 
-    ydot[2] = (2.*const.E_0*(t_amb-y[2])/y[0]
+    ydot[2] = (2.*E_0*(t_amb-y[2])/y[0]
                + 4.*mdot*(t_b-y[2])/(math.pi*y[0]*y[1])
                - 4.*const.GAM_T*(const.C_D**0.5)*(y[2]-t_b)/(math.pi*y[0]))
 
-    ydot[3] = (2.*const.E_0*(s_amb-y[3])/y[0] 
+    ydot[3] = (2.*E_0*(s_amb-y[3])/y[0] 
                + 4.*mdot*(s_b-y[3])/(math.pi*y[0]*y[1])
                - 4.*const.GAM_S*(const.C_D**0.5)*(y[3]-s_b)/(math.pi*y[0]))
 
     return ydot
 
 def calc_plume(w_0, b_0, h_w, ambient, 
-               t_0 = 1.0e-3, s_0 = 1.0e-3, MELT=True, z_step=0.1):
+               t_0 = 1.0e-3, s_0 = 1.0e-3,
+               MELT=True, z_step=0.1, E_0=const.E_0):
     """Solve the plume equations for the specified initial conditions
 
 
@@ -295,7 +300,7 @@ def calc_plume(w_0, b_0, h_w, ambient,
     solver = ode(wallPlume).set_integrator('lsoda', atol=1.e-5, rtol=1.e-5)
     
     # set initial conidtions in solver with y array, z=0 and args
-    solver.set_initial_value(y, 0).set_f_params(ambient, h_w, MELT)
+    solver.set_initial_value(y, 0).set_f_params(ambient, h_w, MELT, E_0)
 
     # iterate over depths while the solver completes successfully
     # and we are below the maximum height
