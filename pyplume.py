@@ -180,7 +180,7 @@ def wallPlume(z, y, ambient, z_max, MELT=True, E_0=const.E_0):
     See: Cowton et al. (2015) DOI: 10.1002/2014JC010324
 
     SRB modified:
-        Entrainment is added as a function to allow
+        Entrainment is added as an argument to allow
         iterations. Default is the same as const.E_0
     """
 
