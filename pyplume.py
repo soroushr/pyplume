@@ -165,7 +165,7 @@ def get_melt(vel_inf,t_inf,s_inf,pressure):
              (const.A*s_inf - const.B - const.C*pressure + const.T_I 
                 - (const.L/const.C_I)) 
              - const.GAM_T*const.C_W*(t_inf - const.B - const.C*pressure))
-    cc = const.GAM_S*s_inf*(const.C_I*(const.B + const.C*pressure - const.T_I)                             + const.L)
+    cc = const.GAM_S*s_inf*(const.C_I*(const.B + const.C*pressure - const.T_I) + const.L)
 
     s_b = (1./(2.*aa))*(-bb-((bb**2.-4.*aa*cc)**0.5))
     t_b = const.A*s_b+const.B+const.C*pressure

@@ -5,17 +5,15 @@ sys.path.append('..')
 import pyplume
 
 plt.rc('font', family='serif')
-#plt.rcParams['axes.grid'] = True
-
 
 SAVE_DIR = "./figs/"
 if not os.path.exists(SAVE_DIR):
     os.mkdir(SAVE_DIR)
 
 ## Model Setup
-h_i = 1000. # ice thickness [m]
-h_w = 900. # ocean water depth [m]
-discharge = 1000.  # discharge [m^3/s]
+h_i = 500. # ice thickness [m]
+h_w = 450. # ocean water depth [m]
+discharge = 500.  # discharge [m^3/s]
 
 # Generate lists
 depth = np.arange(0, h_w + 1., 1.)
@@ -35,7 +33,8 @@ ambient = pyplume.Ambient(h_w, salinity, temperature, depth=depth)
 radius, velocity = pyplume.inlet(h_i, h_w, discharge)
 
 # a range for entrainment
-E_0s = np.arange(0.01, 0.09+0.01, 0.01)
+#E_0s = np.arange(0.01, 0.09+0.01, 0.01)
+E_0s = [0.09]
 
 for E_0 in E_0s[::-1]:
     plume = pyplume.calc_plume(velocity, radius, h_w, ambient,

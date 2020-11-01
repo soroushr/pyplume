@@ -4,28 +4,29 @@ import sys, os
 sys.path.append('..')
 import pyplume
 import matplotlib
+import gsw
 
 plt.rc('font', family='serif')
 #plt.rcParams['axes.grid'] = True
 
-E_0 = 0.09 
+E_0 = 0.09
 
 SAVE_DIR = "./figs/"
 if not os.path.exists(SAVE_DIR):
     os.mkdir(SAVE_DIR)
 
 ## Model Setup
-h_i = 1000. # ice thickness [m]
-h_w = 900. # ocean water depth [m]
+h_i = 500. # ice thickness [m]
+h_w = 450. # ocean water depth [m]
 #discharge = 1000.  # discharge [m^3/s]
 #discharges = np.arange(1000, 2000+1, 500)
-discharges = np.arange(500, 2500+1, 250)
+discharges = np.arange(250, 1500+1, 250)
 
 # Generate lists
 depth = np.arange(0, h_w + 1., 1.)
 salinity = np.linspace(31.,34.,len(depth))
 # linear stratification
-fjord_bottom_temps = np.arange(-2, 4+0.1, 0.5)
+fjord_bottom_temps = np.arange(-1, 4+0.1, 0.5)
 #fjord_bottom_temps = np.arange(-2,2+0.1,1)
 
 array_discharge = []
@@ -50,11 +51,17 @@ for discharge in discharges:
             plume_top_temperature = plume['t_p'][-1]
             plume_peak = np.asarray(plume['z']).max()
 
+        pressure = [ ff*(1027.*9.81*1.e-4) for ff in plume['z'] ]
+        freezing_temp = gsw.t_freezing(p = pressure,
+                                       SA = plume['s_p'],
+                                       saturation_fraction = 0)
+
         if plume_peak < h_w:
             edgecolor = "none" #'#7f6400'
         else:
-            if plume_top_temperature < 0:
+            if plume_top_temperature < freezing_temp[-1]: # 0 :
                 edgecolor = 'black'
+                print("shit is supercooled dog! it's cold: ", freezing_temp[-1])
             else:
                 edgecolor = "#d3d3d3"
 
@@ -70,8 +77,8 @@ for discharge in discharges:
                                     marker='o', edgecolor=array_temperature[:,1])
 
 plt.colorbar(scatter_plot, label='temperature of plume top ($^{\circ}$C)')
-plt.title("supercooling as a function of $Q$ and $T_{a0}$")
-plt.xlabel("$T_{a0}$ (surface temperature fixed at -2$^{\circ}$C)")
+plt.title("supercooling as a function of $Q$ and $T_{a0}$, depth=%i m \n ambient surface temperature fixed at %i$^{\circ}$C"%(h_w, int(fjord_bottom_temps[0])))
+plt.xlabel("$T_{a0}$")
 plt.ylabel("$Q$, subglacial discharge (m$^3$/s)")
 plt.savefig(SAVE_DIR + 'scatter-test.png', dpi=300)
 print("temperature saved")
