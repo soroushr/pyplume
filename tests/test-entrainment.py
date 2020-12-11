@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+from scipy.optimize import minimize_scalar
 import sys, os
 sys.path.append('..')
 import pyplume
 import gsw
-
 plt.rc('font', family='serif')
 
 SAVE_DIR = "./figs/entrainment/"
@@ -14,10 +15,19 @@ if not os.path.exists(SAVE_DIR):
 def get_pressure(given_depth):
     return given_depth*(1027.*9.81*1.e-4)
 
+def salinity_profile(depth, salinity_top=10., salinity_bottom=34., *args):
+    
+    def func(x):
+        return depth - np.exp( salinity_bottom / (x+1e-20) ) + np.exp( salinity_top / (x+1e-20) )
+
+    res = minimize_scalar(func).fun
+
+    return res
+
 ## Model Setup
 h_i = 400. # ice thickness [m]
 h_w = 350. # ocean water depth [m]
-discharge = 10000.  # discharge [m^3/s]
+discharge = 2500.  # discharge [m^3/s]
 
 # Generate lists
 depth = np.arange(0, h_w + 1., 1.)
@@ -31,7 +41,7 @@ temperature_top = np.linspace(t_top, t_mid, int(len(depth)/4)+1)
 temperature_bot = np.linspace(t_mid, t_bot, int(3*len(depth)/4))
 temperature = np.hstack([temperature_top, temperature_bot])
 
-s_top, s_mid, s_bot = 30, 32.0, 34.0
+s_top, s_mid, s_bot = 10, 32.0, 34.0
 
 salinity_top = np.linspace(s_top, s_mid, int(len(depth)/4)+1)
 salinity_bot = np.linspace(s_mid, s_bot, int(3*len(depth)/4))
@@ -40,7 +50,7 @@ salinity = np.hstack([salinity_top, salinity_bot])
 # modify top layer's temperature and salinity
 # to match Mary Louise Timmermanns' suggestion
 # "prime" the surface for 10 meters
-priming_depth = 50
+priming_depth = 5
 
 intrusion_depths = [0]
 
@@ -84,7 +94,7 @@ for E_0 in E_0s[::-1]:
         plume_top = plume['t_p'][-1]
 
 
-    print("temperature PMP of plume top is: {}".format(plume_pmp_top) )
+    print("freezing point of plume top is: {}".format(plume_pmp_top) )
     print("temperature of plume top is: {}".format(plume_top) )
 
     if plume_top > plume_pmp_top:
@@ -114,7 +124,7 @@ for E_0 in E_0s[::-1]:
     # salinity
     ax[3].plot(plume['s_p'], plume['z'], color, label='Plume Profile')
     ax[3].plot(ambient.salinity, ambient.z, 'k:', label= 'Ambient Profile')
-    ax[3].set_xlim(0, 35)
+    ax[3].set_xlim(-2.5, 35)
     ax[3].set_xlabel('Salinity (g/kg)')
 
     # pressure melting temperature profile
